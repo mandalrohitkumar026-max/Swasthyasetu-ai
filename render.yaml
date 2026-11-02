@@ -1,0 +1,51 @@
+﻿services:
+  # 1. SwasthyaSetu Node.js Backend API
+  - type: web
+    name: swasthyasetu-backend
+    env: node
+    region: singapore
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: ALLOWED_ORIGINS
+        value: https://swasthyasetu.vercel.app,https://swasthyasetu-ai.vercel.app
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 900000
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 200
+      - key: AUTH_RATE_LIMIT_MAX_REQUESTS
+        value: 20
+      - key: AI_SERVICE_URL
+        fromService:
+          type: web
+          name: swasthyasetu-ai
+          property: host
+
+  # 2. SwasthyaSetu FastAPI AI Clinical Intelligence Engine
+  - type: web
+    name: swasthyasetu-ai
+    env: python
+    region: singapore
+    plan: free
+    rootDir: ai_service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: ALLOWED_ORIGINS
+        value: https://swasthyasetu.vercel.app,https://swasthyasetu-backend.onrender.com
